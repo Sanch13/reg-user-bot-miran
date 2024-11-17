@@ -1,0 +1,27 @@
+registration.db
+excel
+logs
+venv
+*pycache*
+.idea
+miran/media
+*.sqlite3
+
+*.pyc
+__pycache__
+__init__
+*.crt
+*.key
+.github
+
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.env
+/env
