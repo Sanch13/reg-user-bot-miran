@@ -4,10 +4,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     API_TELEGRAM_TOKEN: SecretStr
-    CHANNEL_LINK: str
+    CHANNEL_LINK_MIRAN: str
     CHANNEL_ID_MIRAN: str
 
-    DATABASE: str
+    DB_USER_PSQL: str
+    DB_PASSWORD_PSQL: SecretStr
+    DB_HOST_PSQL: str
+    DB_PORT_PSQL: int
+    DB_DATABASE_PSQL: str
 
     SMTP_SERVER: str
     PORT: int

@@ -10,7 +10,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from config import settings
-from logging_config import logger
+from logs.logging_config import logger
 
 
 delivery = {

@@ -5,7 +5,7 @@ from openpyxl.styles import Alignment
 
 from config import settings
 from utils import get_path_to_excel_file, get_excel_filename_today
-from logging_config import logger
+from logs.logging_config import logger
 
 
 async def create_db():
