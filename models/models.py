@@ -17,6 +17,9 @@ class User(Base):
     full_name = Column(String, default='')
     full_name_from_tg = Column(String, default='')
 
+    # Связь с Ticket
+    tickets = relationship("Ticket", back_populates="user")
+
 
 class Lottery(Base):
     __tablename__ = "lotteries"
@@ -26,6 +29,9 @@ class Lottery(Base):
     description = Column(String, default='')  # Описание лотереи
     create = Column(DateTime, default=func.now())  # время будет получено непосредственно из базы
     # данных
+
+    # Связь с Ticket
+    tickets = relationship("Ticket", back_populates="lottery")
 
 
 class Ticket(Base):

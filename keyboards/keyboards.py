@@ -6,8 +6,8 @@ from config import settings
 def get_inline_keyboard_full_name() -> InlineKeyboardMarkup:
     buttons = [
         [
-            InlineKeyboardButton(text="Ввести ФИО",
-                                 callback_data="full_name"),
+            InlineKeyboardButton(text="Ввести данные",
+                                 callback_data="first_name"),
         ]
     ]
 

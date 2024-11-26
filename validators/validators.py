@@ -1,8 +1,13 @@
 import re
+from aiogram.types import Message
 
 
-def validate_full_name(full_name):
-    # Регулярное выражение для проверки только русских или английских букв
-    pattern = r'^[a-zA-Zа-яА-ЯёЁ\s]+$'
-    if not re.match(pattern, full_name):
-        raise ValueError("Неверный формат ФИО")
+async def validate_string(message: Message):
+    try:
+        message_text = message.text.strip()
+        pattern = r'^[а-яА-ЯёЁ\s]+$'
+        if not re.match(pattern, message_text):
+            return False
+        return True
+    except Exception as error:
+        return False
