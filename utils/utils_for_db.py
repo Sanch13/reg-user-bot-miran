@@ -1,8 +1,11 @@
 from sqlalchemy import exists, join
 from sqlalchemy.future import select
+from sqlalchemy.exc import SQLAlchemyError
 
 from models.database import AsyncSession
 from models.models import User, Lottery, Ticket
+
+from logs.logging_config import logger
 
 
 async def is_exists_user(telegram_id: int) -> bool:
@@ -63,16 +66,21 @@ async def save_user(
     :param username: str:
     :return: None:
     """
-    async with AsyncSession() as session:
-        new_user = User(
-            telegram_id=telegram_id,
-            full_name=full_name,
-            full_name_from_tg=full_name_from_tg,
-            username=username
-        )  # Создаём новый объект User
+    try:
+        async with AsyncSession() as session:
+            new_user = User(
+                telegram_id=telegram_id,
+                full_name=full_name,
+                full_name_from_tg=full_name_from_tg,
+                username=username
+            )  # Создаём новый объект User
 
-        session.add(new_user)  # Добавляем его в сессию
-        await session.commit()  # Сохраняем изменения
+            session.add(new_user)
+            await session.commit()
+            logger.info(f"Пользователь {full_name} с ID {telegram_id} успешно добавлен.")
+
+    except SQLAlchemyError as e:
+        logger.error(f"Ошибка при добавлении пользователя{full_name} с ID {telegram_id}: {e}")
 
 
 async def get_lottery_data(name):
