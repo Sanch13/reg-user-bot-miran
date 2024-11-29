@@ -12,7 +12,7 @@ def check_subscribe(func):
         user_id = message.from_user.id
         status = await bot.get_chat_member(chat_id=settings.CHANNEL_ID_MIRAN, user_id=user_id)
         if status.status in ('member', 'creator', 'administrator'):
-            await message.answer(f"""Упс!\nВы уже зарегистрированы.""")
+            await message.answer(f"""Вы уже зарегистрированы.""")
         else:
             await func(message)
 

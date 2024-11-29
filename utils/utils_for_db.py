@@ -18,18 +18,57 @@ async def is_exists_user(telegram_id: int) -> bool:
         return result.scalar()  # Получение результата (True или False)
 
 
-async def save_user(telegram_id: int, full_name: str, full_name_from_tg: str) -> None:
+async def get_user_by_id(telegram_id: int) -> User:
     """
-    Функция для сохранения пользователя в БД
+    Возвращает пользователя по telegram_id
+    :param telegram_id:
+    :return: user:
+    """
+    async with AsyncSession() as session:
+        query = select(User).where(User.telegram_id == telegram_id)
+        result = await session.execute(query)
+        user = result.scalar_one_or_none()
+        return user
+
+
+async def update_is_active_user_by_id(telegram_id: int, full_name: str) -> User:
+    """
+    Возвращает пользователя по telegram_id
     :param telegram_id:
     :param full_name:
+    :return: user:
+    """
+    async with AsyncSession() as session:
+        query = select(User).where(User.telegram_id == telegram_id)
+        result = await session.execute(query)
+        user = result.scalar_one_or_none()
+        user.full_name = full_name
+        user.is_active = True
+        await session.commit()
+        await session.refresh(user)
+        return user
+
+
+async def save_user(
+        telegram_id: int,
+        full_name: str,
+        full_name_from_tg: str,
+        username: str
+) -> None:
+    """
+    Функция для сохранения пользователя в БД
+    :param telegram_id: int:
+    :param full_name: str:
+    :param full_name_from_tg: str:
+    :param username: str:
     :return: None:
     """
     async with AsyncSession() as session:
         new_user = User(
             telegram_id=telegram_id,
             full_name=full_name,
-            full_name_from_tg=full_name_from_tg
+            full_name_from_tg=full_name_from_tg,
+            username=username
         )  # Создаём новый объект User
 
         session.add(new_user)  # Добавляем его в сессию

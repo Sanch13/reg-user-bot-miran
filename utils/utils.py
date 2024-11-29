@@ -2,11 +2,13 @@ import asyncio
 import aiosmtplib
 from email.message import EmailMessage
 
+from aiogram.types import Message
+
 from config import settings
 from logs.logging_config import logger
 
 
-async def send_email(telegram_id, full_name, full_name_from_tg):
+async def send_email(telegram_id, full_name, full_name_from_tg, username):
     message = EmailMessage()
     message["From"] = settings.SENDER_EMAIL
     message["To"] = settings.TO_EMAILS
@@ -20,6 +22,7 @@ async def send_email(telegram_id, full_name, full_name_from_tg):
                 <p><strong>Telegram ID:</strong> {telegram_id}</p>
                 <p><strong>Введенное ФИО при регистрации:</strong> {full_name}</p>
                 <p><strong>Полное имя из Telegram:</strong> {full_name_from_tg}</p>
+                <p><strong>Username из Telegram:</strong> {username}</p>
             </body>
         </html>
         """
@@ -39,3 +42,12 @@ async def send_email(telegram_id, full_name, full_name_from_tg):
         logger.error("Ошибка: время ожидания истекло при подключении или отправке письма.")
     except Exception as e:
         logger.exception(f"Ошибка при отправке письма: {str(e)}")
+
+
+async def get_data_user(message: Message, data: dict) -> tuple:
+    return (
+        message.from_user.id,
+        f"{data.get('last_name', '')} {data.get('first_name', '')} {data.get('middle_name', '')}",
+        message.from_user.full_name or "",
+        message.from_user.username or ""
+    )

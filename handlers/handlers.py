@@ -4,35 +4,58 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
 from init_bot import router
-from keyboards.keyboards import get_inline_keyboard_full_name, get_button_reg
+from keyboards.keyboards import (
+    get_inline_keyboard_enter_data,
+    get_button_reg,
+    get_inline_keyboard_yes_no
+)
 from middleware.middleware import check_subscribe
 from validators.validators import validate_string
-from utils.utils_for_db import save_user
-from utils.utils import send_email
+from utils.utils_for_db import save_user, get_user_by_id, update_is_active_user_by_id
+from utils.utils import send_email, get_data_user
 
 
 class Registration(StatesGroup):
-    first_name = State()
+    waiting_for_consent = State()
     last_name = State()
+    first_name = State()
     middle_name = State()
-    button = State()
 
 
 @router.message(CommandStart())
 @check_subscribe
 async def cmd_start(message: Message):
-    keyboard = get_inline_keyboard_full_name()
+    keyboard = get_inline_keyboard_enter_data()
     await message.answer(
-        text=f"Приветствую тебя\nДля регистрации в нашем телеграм канале введите свои личные данные",
+        text=f"Рады приветствовать Вас в Telegram-MIRAN\nДля регистрации введите ваши ФИО",
         reply_markup=keyboard
     )
 
 
-@router.callback_query(lambda c: c.data == "first_name")
-async def process_input_first_name(callback_query: CallbackQuery, state: FSMContext):
-    await state.set_state(Registration.last_name)
-    await callback_query.message.answer("Введите ваше имя:")
+@router.callback_query(lambda c: c.data == "waiting_for_consent")
+async def process_ask_for_consent(callback_query: CallbackQuery, state: FSMContext):
+    keyboard = get_inline_keyboard_yes_no()
+    await state.set_state(Registration.waiting_for_consent)
+    await callback_query.message.answer("Я согласен на обработку персональных данных",
+                                        reply_markup=keyboard)
     await callback_query.answer()
+
+
+@router.callback_query(Registration.waiting_for_consent, lambda c: c.data in ["yes", "no"])
+async def process_choose_yes_or_no(callback_query: CallbackQuery, state: FSMContext):
+    if callback_query.data == "yes":
+        await state.set_state(Registration.last_name)
+        await callback_query.message.answer("Введите вашу фамилию (Только русские символы):")
+        await callback_query.answer()
+
+    else:
+        await callback_query.message.delete()
+        await callback_query.message.answer(
+            f"Очень жаль. Надеемся, Вы передумаете.",
+            reply_markup=get_inline_keyboard_enter_data()
+            )
+        await callback_query.answer()
+        await state.clear()
 
 
 @router.message(Registration.last_name)
@@ -41,47 +64,52 @@ async def process_input_last_name(message: Message,  state: FSMContext):
         await message.answer("Только русские буквы.")
         return
 
+    await state.update_data(last_name=message.text.strip())
+    await state.set_state(Registration.first_name)
+    await message.answer("Введите ваше имя (только русские символы):")
+
+
+@router.message(Registration.first_name)
+async def process_input_first_name(message: Message,  state: FSMContext):
+    if not await validate_string(message):
+        await message.answer("Только русские буквы.")
+        return
+
     await state.update_data(first_name=message.text.strip())
     await state.set_state(Registration.middle_name)
-    await message.answer("Введите вашу фамилию:")
+    await message.answer("Введите ваше отчество (только русские символы):")
 
 
 @router.message(Registration.middle_name)
 async def process_input_middle_name(message: Message,  state: FSMContext):
     if not await validate_string(message):
-        await message.answer("Только русские буквы.")
+        await message.answer("только русские буквы.")
         return
 
-    await state.update_data(last_name=message.text.strip())
-    await state.set_state(Registration.button)
-    await message.answer("Введите ваше отчество:")
-
-
-@router.message(Registration.button)
-async def process_show_button_to_chanel(message: Message, state: FSMContext):
-    if not await validate_string(message):
-        await message.answer("Только русские буквы.")
-        return
-
-    telegram_id = message.from_user.id
     await state.update_data(middle_name=message.text.strip())
     data = await state.get_data()
+    telegram_id, full_name, full_name_from_tg, username = await get_data_user(message, data)
 
-    first_name, middle_name, last_name = data.values()
-    full_name = f"{first_name} {middle_name} {last_name}"
-    full_name_from_tg = message.from_user.full_name or ""
+    user = await get_user_by_id(telegram_id=telegram_id)
+    if user:
+        if user.is_active is True:
+            await message.answer("Ваша заявка уже обрабатывается Администратором")
+            return
+        elif user.is_active is False:
+            await update_is_active_user_by_id(telegram_id=telegram_id, full_name=full_name)
+    else:
+        await save_user(
+            telegram_id=telegram_id,
+            full_name=full_name,
+            full_name_from_tg=full_name_from_tg,
+            username=username
+        )
 
-    await save_user(
-        telegram_id=telegram_id,
-        full_name=full_name,
-        full_name_from_tg=full_name_from_tg
-    )
-
-    await send_email(telegram_id, full_name, full_name_from_tg)
+    await send_email(telegram_id, full_name, full_name_from_tg, username)
 
     keyboards = get_button_reg()
     await message.answer(
-        f"""Спасибо!\nЧтобы зарегистрироваться нажмите на кнопку Регистрация""",
+        f"""Спасибо!\nЧтобы зарегистрироваться, нажмите на кнопку Регистрация.\nВаш запрос будет обработан Администратором.""",
         reply_markup=keyboards
     )
 

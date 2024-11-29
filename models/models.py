@@ -1,7 +1,16 @@
 from datetime import datetime
 
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String, BigInteger, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    BigInteger,
+    DateTime,
+    ForeignKey,
+    UniqueConstraint,
+    Boolean
+)
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
@@ -16,6 +25,8 @@ class User(Base):
     telegram_id = Column(BigInteger, unique=True, index=True)
     full_name = Column(String, default='')
     full_name_from_tg = Column(String, default='')
+    username = Column(String, default='')
+    is_active = Column(Boolean, default=True, nullable=False)
 
     # Связь с Ticket
     tickets = relationship("Ticket", back_populates="user")
