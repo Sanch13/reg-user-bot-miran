@@ -1,10 +1,13 @@
 import asyncio
+from asyncio import sleep
+
 import aiosmtplib
 from email.message import EmailMessage
 
 from aiogram.types import Message
 
 from config import settings
+from init_bot import bot
 from logs.logging_config import logger
 
 
@@ -51,3 +54,22 @@ async def get_data_user(message: Message, data: dict) -> tuple:
         message.from_user.full_name or "",
         message.from_user.username or ""
     )
+
+
+#  проверка на добавление пользователя в группу и ответ пользователю
+async def is_user_in_group(user_id: int, group_id: int) -> bool:
+    try:
+        member = await bot.get_chat_member(chat_id=group_id, user_id=user_id)
+        return member.status in ('member', 'creator', 'administrator')
+    except Exception as e:
+        # Логирование ошибок
+        print(f"Ошибка проверки пользователя: {e}")
+        return False
+
+
+async def check_user_in_group_and_notify(user_id: int, group_id: int, message: Message):
+    while True:
+        if await is_user_in_group(user_id, group_id):
+            await message.answer("Вы успешно добавлены в группу и можете пользоваться контентом!")
+            break
+        await sleep(30)  # Проверять каждые 30 секунд
