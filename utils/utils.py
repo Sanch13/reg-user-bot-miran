@@ -1,10 +1,10 @@
 import asyncio
-from asyncio import sleep
 
 import aiosmtplib
 from email.message import EmailMessage
 
 from aiogram.types import Message
+from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 
 from config import settings
 from init_bot import bot
@@ -12,6 +12,9 @@ from logs.logging_config import logger
 
 
 async def send_email(telegram_id, full_name, full_name_from_tg, username):
+    """
+    Отправляет в фоне письмо
+    """
     message = EmailMessage()
     message["From"] = settings.SENDER_EMAIL
     message["To"] = settings.TO_EMAILS
@@ -48,6 +51,9 @@ async def send_email(telegram_id, full_name, full_name_from_tg, username):
 
 
 async def get_data_user(message: Message, data: dict) -> tuple:
+    """
+    Формирует данные пользователя в tuple
+    """
     return (
         message.from_user.id,
         f"{data.get('last_name', '')} {data.get('first_name', '')} {data.get('middle_name', '')}",
@@ -57,19 +63,27 @@ async def get_data_user(message: Message, data: dict) -> tuple:
 
 
 #  проверка на добавление пользователя в группу и ответ пользователю
-async def is_user_in_group(user_id: int, group_id: int) -> bool:
+async def is_user_in_group(user_id: int) -> bool:
+    """
+    Проверяет существует ли пользователь в группе
+    """
     try:
-        member = await bot.get_chat_member(chat_id=group_id, user_id=user_id)
+        member = await bot.get_chat_member(chat_id=settings.CHANNEL_ID_MIRAN, user_id=user_id)
         return member.status in ('member', 'creator', 'administrator')
-    except Exception as e:
-        # Логирование ошибок
-        print(f"Ошибка проверки пользователя: {e}")
+    except (TelegramForbiddenError, TelegramBadRequest) as e:
+        logger.error(f"Ошибка проверки пользователя {user_id}: {e}")
         return False
 
 
-async def check_user_in_group_and_notify(user_id: int, group_id: int, message: Message):
-    while True:
-        if await is_user_in_group(user_id, group_id):
+async def check_user_in_group_and_notify(user_id: int, message: Message, max_attempts: int = 100):
+    """
+    Уведомляет пользователя об успешной подписке в группу. Таймаут = 1 час.
+    После истечения этого времени уведомления не будет.
+    """
+    attempts = 0
+    while attempts < max_attempts:
+        if await is_user_in_group(user_id):
             await message.answer("Вы успешно добавлены в группу и можете пользоваться контентом!")
-            break
-        await sleep(30)  # Проверять каждые 30 секунд
+            return
+        await asyncio.sleep(36)  # Проверять каждые 30 секунд
+        attempts += 1
