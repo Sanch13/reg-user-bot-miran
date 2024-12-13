@@ -13,7 +13,7 @@ from logs.logging_config import logger
 
 async def send_email(telegram_id, full_name, full_name_from_tg, username):
     """
-    Отправляет в фоне письмо
+    Отправляет  письмо
     """
     message = EmailMessage()
     message["From"] = settings.SENDER_EMAIL
@@ -62,6 +62,15 @@ async def get_data_user(message: Message, data: dict) -> tuple:
     )
 
 
+async def normalize_full_name(full_name: str) -> str:
+    """
+    Нормализует ФИО к виду: Иванов Иван Иванович
+    :param full_name:
+    :return:
+    """
+    return full_name.title()
+
+
 #  проверка на добавление пользователя в группу и ответ пользователю
 async def is_user_in_group(user_id: int) -> bool:
     """
@@ -83,7 +92,7 @@ async def check_user_in_group_and_notify(user_id: int, message: Message, max_att
     attempts = 0
     while attempts < max_attempts:
         if await is_user_in_group(user_id):
-            await message.answer("Вы успешно добавлены в группу и можете пользоваться контентом!")
+            await message.answer("Вы успешно добавлены в Telegram-канал МИРАН и можете пользоваться контентом!")
             return
-        await asyncio.sleep(36)  # Проверять каждые 30 секунд
+        await asyncio.sleep(36)  # Проверять каждые 36 секунд
         attempts += 1

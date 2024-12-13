@@ -36,7 +36,7 @@ async def get_user_by_id(telegram_id: int) -> User:
 
 async def update_is_active_user_by_id(telegram_id: int, full_name: str) -> User:
     """
-    Возвращает пользователя по telegram_id
+    Обновляет и возвращает пользователя по telegram_id
     :param telegram_id:
     :param full_name:
     :return: user:

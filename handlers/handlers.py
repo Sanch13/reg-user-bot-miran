@@ -13,7 +13,12 @@ from keyboards.keyboards import (
 from middleware.middleware import check_subscribe
 from validators.validators import validate_string
 from utils.utils_for_db import save_user, get_user_by_id, update_is_active_user_by_id
-from utils.utils import send_email, get_data_user, check_user_in_group_and_notify
+from utils.utils import (
+    send_email,
+    get_data_user,
+    check_user_in_group_and_notify,
+    normalize_full_name
+)
 from logs.logging_config import logger
 
 
@@ -29,7 +34,7 @@ class Registration(StatesGroup):
 async def cmd_start(message: Message):
     keyboard = get_inline_keyboard_enter_data()
     await message.answer(
-        text=f"Рады приветствовать Вас в Telegram-MIRAN\nДля регистрации введите ваши ФИО",
+        text=f'Для регистрации введите ваши ФИО\nНажмите на кнопку "Ввести данные"',
         reply_markup=keyboard
     )
 
@@ -91,6 +96,7 @@ async def process_input_middle_name(message: Message,  state: FSMContext):
     await state.update_data(middle_name=message.text.strip())
     data = await state.get_data()
     telegram_id, full_name, full_name_from_tg, username = await get_data_user(message, data)
+    full_name = await normalize_full_name(full_name)
 
     user = await get_user_by_id(telegram_id=telegram_id)
     if user:
