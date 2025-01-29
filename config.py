@@ -13,12 +13,17 @@ class Settings(BaseSettings):
     DB_PORT_PSQL: int
     DB_DATABASE_PSQL: str
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DB: int
+
     SMTP_SERVER: str
     PORT: int
     SENDER_EMAIL: str
     PASSWORD: str
     SUBJECT: str
     BODY: str
+
     TO_EMAIL: str
     TO_EMAILS: str
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
