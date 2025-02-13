@@ -164,13 +164,18 @@ async def kick_user_from_channel(channel_id=settings.CHANNEL_ID_MIRAN):
                     )
                     logger.info(f"Пользователь {full_name} c {telegram_id} разблокирован!!!")
                     await asyncio.sleep(5)
-                    await send_email_that_user_delete_from_chanel(full_name, telegram_id)
+                    task = asyncio.create_task(send_email_that_user_delete_from_chanel(full_name, telegram_id))
+                    task.add_done_callback(lambda t: logger.info(
+                        "Удаление пользователя. Фоновая задача завершена успешно. "
+                        "Письмо отправленно")
+                        if t.exception() is None else
+                        logger.error(f"Ошибка в задаче: {t.exception()}"))
                 except Exception as e:
                     logger.exception(f"Ошибка при кике {full_name}: {e}")
             else:
                 await asyncio.sleep(30)
         except asyncio.CancelledError:
-            logger.info("Задача кика пользователей остановлена")
+            logger.info("Задача удаления пользователей остановлена")
             raise
         except Exception as e:
             logger.exception(f"Неожиданная ошибка: {e}")

@@ -40,6 +40,7 @@ class Lottery(Base):
     description = Column(String, default='')  # Описание лотереи
     create = Column(DateTime, default=func.now())  # время будет получено непосредственно из базы
     # данных
+    is_active = Column(Boolean, default=False, nullable=False)
 
     # Связь с Ticket
     tickets = relationship("Ticket", back_populates="lottery")

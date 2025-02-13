@@ -105,6 +105,7 @@ async def process_input_middle_name(message: Message,  state: FSMContext):
             return
         elif user.is_active is False:
             await update_is_active_user_by_id(telegram_id=telegram_id, full_name=full_name)
+            logger.info(f"Пользователь {full_name} id={telegram_id} успешно обновлен")
     else:
         await save_user(
             telegram_id=telegram_id,
@@ -112,6 +113,7 @@ async def process_input_middle_name(message: Message,  state: FSMContext):
             full_name_from_tg=full_name_from_tg,
             username=username
         )
+        logger.info(f"Пользователь {full_name} id={telegram_id} успешно создан")
 
     # Отправка письма в фоновом режиме с логированием результата
     task = asyncio.create_task(send_email(telegram_id, full_name, full_name_from_tg, username))
