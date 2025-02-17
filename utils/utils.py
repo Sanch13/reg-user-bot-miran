@@ -179,4 +179,4 @@ async def kick_user_from_channel(channel_id=settings.CHANNEL_ID_MIRAN):
             raise
         except Exception as e:
             logger.exception(f"Неожиданная ошибка: {e}")
-            await asyncio.sleep(10)
+            await asyncio.sleep(45)
