@@ -27,6 +27,7 @@ class User(Base):
     full_name_from_tg = Column(String, default='')
     username = Column(String, default='')
     is_active = Column(Boolean, default=True, nullable=False)
+    date_joined = Column(DateTime, nullable=False, server_default=func.now())
 
     # Связь с Ticket
     tickets = relationship("Ticket", back_populates="user")

@@ -6,14 +6,14 @@ venv
 .idea
 miran/media
 *.sqlite3
-
+*.md
 *.pyc
 __pycache__
 __init__
 *.crt
 *.key
 .github
-
+*.sql
 
 # Environments
 .env
